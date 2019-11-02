@@ -79,7 +79,7 @@ class LeaveController extends Controller
 
     public function approve()
     {
-        $leave = Leave::all();
+        $leave = Leave::where('user_id', '!=', auth()->id())->get();
         return view(self::$folder . 'approve', compact('leave'));
     }
 

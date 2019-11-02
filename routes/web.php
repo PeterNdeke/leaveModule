@@ -12,7 +12,7 @@
  */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Auth::routes();
@@ -21,5 +21,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('leave', 'LeaveController@create');
     Route::post('sbmit-leave', 'LeaveController@store');
     Route::get('approve-request', 'LeaveController@approve');
-    Route::post('approve/{id}','LeaveController@approveRequest');
+    Route::post('approve/{id}', 'LeaveController@approveRequest');
 });

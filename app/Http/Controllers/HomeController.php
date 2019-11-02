@@ -23,6 +23,7 @@ class HomeController extends Controller
      */
     public function index()
     {
+
         $leave = Leave::with('user')->orderBy('id', 'DESC')->where('user_id', auth()->id())->get();
 
         return view('home', compact('leave'));
