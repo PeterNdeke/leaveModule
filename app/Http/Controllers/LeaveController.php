@@ -6,6 +6,7 @@ use App\Leave;
 use App\Mail\LeaveApplication;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 class LeaveController extends Controller
@@ -56,20 +57,28 @@ class LeaveController extends Controller
         $startDate = $request->startDay;
         $durationDay = $request->duration_days;
         $expectedEndDate = date('Y-m-d', strtotime($startDate . "+$durationDay days"));
-
+       // dd($this->weekDaysAndPublicHolidays($expectedEndDate));
         if ($request->duration_days > $maxDurationDays) {
             return back()->with([
                 'flash_error' => 'The maximun duration days is 20days',
             ]);
         }
-        $leave = new Leave();
-        $leave->user_id = auth()->id();
-        $leave->leave_start_day = $request->startDay;
-        $leave->leave_end_day = $expectedEndDate;
-        $leave->reason = $request->reason;
-        $leave->status = 'pending';
-        $leave->duration_days = $request->duration_days;
-        $leave->save();
+
+        Auth::user()->leaves()->create([
+            'leave_start_day' => $request->startDay,
+            'leave_end_day' => $this->weekDaysAndPublicHolidays($expectedEndDate),
+            'reason' => $request->reason,
+            'status' => 'pending',
+            'duration_days' => $request->duration_days,
+        ]);
+        // $leave = new Leave();
+        // $leave->user_id = auth()->id();
+        // $leave->leave_start_day = $request->startDay;
+        // $leave->leave_end_day = $expectedEndDate;
+        // $leave->reason = $request->reason;
+        // $leave->status = 'pending';
+        // $leave->duration_days = $request->duration_days;
+        // $leave->save();
         Mail::to($manger->email)->send(new LeaveApplication($manger));
         return redirect('/home')->with([
             'flash_message' => self::$message,
@@ -94,6 +103,22 @@ class LeaveController extends Controller
         return back()->with([
             'flash_message' => 'Leave Approved Successfully',
         ]);
+
+    }
+
+    private function weekDaysAndPublicHolidays($durationDays)
+    {
+
+        $holidays = ['2019-07-04', '2019-10-31', '2019-12-25'];
+        $i = 1;
+        $workingDays = date('Y-m-d', strtotime($durationDays . ' +' . $i . ' Weekday'));
+
+        while (in_array($workingDays, $holidays)) {
+            $i++;
+            $workingDays = date('Y-m-d', strtotime($durationDays . ' +' . $i . ' Weekday'));
+        }
+
+        return $workingDays;
 
     }
 
